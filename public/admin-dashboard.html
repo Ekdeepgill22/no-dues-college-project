@@ -2,137 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <img src="/inpts/gne_logo.png" alt="College Logo" class="app-header__logo">
+      <img src="/inpts/gne_logo.png" alt="GNDEC Logo" class="app-header__logo" onerror="this.style.display='none'">
       <div>
         <p class="app-header__text-main">GNDEC, Ludhiana</p>
         <p class="app-header__text-sub">Admin Dashboard</p>
       </div>
     </header>
+
     <main class="app-main">
-  <h2>Admin Dashboard</h2>
-  <div id="requests"></div>
-
-  <script>
-    const statusLabel = (req) => {
-      const s = (req.requestStatus || req.status || "").toLowerCase();
-      if (s === "approved") return "Approved";
-      if (s === "denied") return "Denied";
-      if (s === "pending") return "Pending";
-      return "Pending";
-    };
-
-    function renderState(message, isError = false) {
-      const container = document.getElementById("requests");
-      container.innerHTML = `<p style="padding:10px;${isError ? "color:red;" : ""}">${message}</p>`;
-    }
-
-    async function loadRequests() {
-      renderState("Loading requests...");
-      try {
-        const res = await fetch("/requests");
-        if (!res.ok) throw new Error("Failed to load");
-        const data = await res.json();
-        const container = document.getElementById("requests");
-        container.innerHTML = "";
-
-        if (!data || data.length === 0) {
-          renderState("No requests found.");
-          return;
-        }
-
-        data.forEach((req) => {
-          const div = document.createElement("div");
-          div.className = "request-box";
-          const label = statusLabel(req);
-          const roll = req.roll || "N/A";
-          const enrollment =
-            (req.certificate && req.certificate.enrollmentNumber) || "N/A";
-
-          const canApprove = label === "Pending";
-          const canDeny = label === "Pending";
-          const certId = req.certificate?.certificateId;
-
-          div.innerHTML = `
-            <p><b>Name:</b> ${req.name}</p>
-            <p><b>Roll:</b> ${roll}</p>
-            <p><b>Enrollment:</b> ${enrollment}</p>
-            <p><b>Document:</b> ${req.docType}</p>
-            <p><b>Status:</b> ${label}</p>
-            <p><b>Signature:</b><br><img src="${req.signature}" width="150"></p>
-            <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
-              <button onclick="review(${req.id})">Review</button>
-              ${
-                canApprove
-                  ? `<button onclick="approve(${req.id})">Approve</button>`
-                  : ""
-              }
-              ${
-                canDeny
-                  ? `<button onclick="deny(${req.id})">Deny</button>`
-                  : ""
-              }
-              ${
-                certId
-                  ? `<a href="/admin/certificates/${encodeURIComponent(
-                      certId
-                    )}/pdf" target="_blank" rel="noopener"><button>Download PDF</button></a>`
-                  : ""
-              }
-            </div>
-          `;
-          container.appendChild(div);
-        });
-      } catch (e) {
-        console.error(e);
-        renderState("Error loading requests. Please try again.", true);
-      }
-    }
-
-    async function approve(id) {
-      try {
-        const res = await fetch(`/approve/${id}`, { method: "PATCH" });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Unable to approve request.");
-        }
-        loadRequests();
-      } catch (e) {
-        alert(e.message || "Unable to approve request.");
-      }
-    }
-
-    async function deny(id) {
-      try {
-        const res = await fetch(`/deny/${id}`, { method: "PATCH" });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Unable to deny request.");
-        }
-        loadRequests();
-      } catch (e) {
-        alert(e.message || "Unable to deny request.");
-      }
-    }
-
-    function review(id) {
-      try {
-        window.location.href = `admin-review.html?requestId=${encodeURIComponent(
-          id
-        )}`;
-      } catch (e) {
-        alert("Unable to open review page.");
-      }
-    }
-
-    loadRequests();
-  </script>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2>Document Requests</h2>
+        <a href="/admin/logout" style="color: #dc3545; font-weight: 600;">Logout</a>
+      </div>
+      <div id="requests"></div>
     </main>
   </div>
+
+  <script>
+    (function() {
+      const container = document.getElementById("requests");
+
+      if (!container) {
+        console.error("Requests container not found");
+        return;
+      }
+
+      function statusLabel(req) {
+        const s = String(req.requestStatus || req.status || "").toLowerCase();
+        if (s === "approved") return "Approved";
+        if (s === "denied") return "Denied";
+        return "Pending";
+      }
+
+      function renderState(message, isError = false) {
+        container.innerHTML = `<p style="padding: 20px; text-align: center; background: ${isError ? '#fee2e2' : '#f8fafc'}; color: ${isError ? '#991b1b' : '#2c3e50'}; border-radius: 8px; margin: 20px auto; max-width: 600px;">${message}</p>`;
+      }
+
+      async function loadRequests() {
+        renderState("Loading requests...");
+        
+        try {
+          const res = await fetch("/requests");
+          if (!res.ok) throw new Error("Failed to load requests");
+          
+          const data = await res.json();
+          container.innerHTML = "";
+
+          if (!Array.isArray(data) || data.length === 0) {
+            renderState("No requests found.");
+            return;
+          }
+
+          data.forEach((req) => {
+            const div = document.createElement("div");
+            div.className = "request-box";
+            
+            const label = statusLabel(req);
+            const roll = req.roll || "N/A";
+            const enrollment = (req.certificate && req.certificate.enrollmentNumber) || "N/A";
+            const canApprove = label === "Pending";
+            const canDeny = label === "Pending";
+            const certId = req.certificate?.certificateId;
+            const signatureSrc = req.signature || "";
+
+            div.innerHTML = `
+              <p><strong>Name:</strong> ${req.name || "N/A"}</p>
+              <p><strong>Roll Number:</strong> ${roll}</p>
+              <p><strong>Enrollment:</strong> ${enrollment}</p>
+              <p><strong>Document Type:</strong> ${req.docType || "N/A"}</p>
+              <p><strong>Status:</strong> <span class="status-badge ${label === 'Approved' ? 'status-badge--verified' : label === 'Denied' ? 'status-badge--revoked' : 'status-badge--provisional'}">${label}</span></p>
+              ${signatureSrc ? `<p><strong>Signature:</strong><br><img src="${signatureSrc}" width="150" alt="Student signature"></p>` : ''}
+              <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button onclick="review(${req.id})">Review</button>
+                ${canApprove ? `<button onclick="approve(${req.id})">Approve</button>` : ''}
+                ${canDeny ? `<button class="button--secondary" onclick="deny(${req.id})">Deny</button>` : ''}
+                ${certId ? `<a href="/admin/certificates/${encodeURIComponent(certId)}/pdf" target="_blank" rel="noopener"><button>Download PDF</button></a>` : ''}
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        } catch (e) {
+          console.error("Load error:", e);
+          renderState("Error loading requests. Please refresh the page.", true);
+        }
+      }
+
+      window.approve = async function(id) {
+        if (!confirm("Are you sure you want to approve this request?")) return;
+        
+        try {
+          const res = await fetch(`/approve/${id}`, { method: "PATCH" });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Unable to approve request.");
+          }
+          await loadRequests();
+          alert("Request approved successfully!");
+        } catch (e) {
+          console.error("Approve error:", e);
+          alert(e.message || "Unable to approve request.");
+        }
+      };
+
+      window.deny = async function(id) {
+        if (!confirm("Are you sure you want to deny this request?")) return;
+        
+        try {
+          const res = await fetch(`/deny/${id}`, { method: "PATCH" });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Unable to deny request.");
+          }
+          await loadRequests();
+          alert("Request denied.");
+        } catch (e) {
+          console.error("Deny error:", e);
+          alert(e.message || "Unable to deny request.");
+        }
+      };
+
+      window.review = function(id) {
+        try {
+          window.location.href = `admin-review.html?requestId=${encodeURIComponent(id)}`;
+        } catch (e) {
+          console.error("Review error:", e);
+          alert("Unable to open review page.");
+        }
+      };
+
+      loadRequests();
+    })();
+  </script>
 </body>
 </html>

@@ -1,196 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Certificate</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificate</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
 <body>
-<div class="certificate">
-  <header class="certificate__header">
-    <div class="certificate__branding">
-      <img id="collegeLogo" src="/inpts/gne_logo.png" alt="College Logo" class="certificate__logo">
-      <div>
-        <p class="certificate__college-name" id="collegeName">Your College Name</p>
-        <p class="certificate__college-tagline" id="collegeTagline">Excellence in Education</p>
+  <div class="certificate">
+    <header class="certificate__header">
+      <div class="certificate__branding">
+        <img id="collegeLogo" src="/inpts/gne_logo.png" alt="College Logo" class="certificate__logo" onerror="this.style.display='none'">
+        <div>
+          <p class="certificate__college-name" id="collegeName">GNDEC, Ludhiana</p>
+          <p class="certificate__college-tagline" id="collegeTagline">Excellence in Education</p>
+        </div>
       </div>
-    </div>
-    <div class="certificate__meta">
-      <p><strong>Certificate ID:</strong> <span id="certId"></span></p>
-      <p><strong>Status:</strong> <span id="certStatus" class="status-badge"></span></p>
-      <p><strong>Issued On:</strong> <span id="certIssuedOn"></span></p>
-      <p><strong>Valid Until:</strong> <span id="certValidUntil"></span></p>
-    </div>
-  </header>
+      <div class="certificate__meta">
+        <p><strong>Certificate ID:</strong> <span id="certId">Loading...</span></p>
+        <p><strong>Status:</strong> <span id="certStatus" class="status-badge">Loading...</span></p>
+        <p><strong>Issued On:</strong> <span id="certIssuedOn">Loading...</span></p>
+        <p><strong>Valid Until:</strong> <span id="certValidUntil">N/A</span></p>
+      </div>
+    </header>
 
-  <section class="certificate__title">
-    <h1 id="certTitle">Certificate</h1>
-    <p class="certificate__purpose" id="certPurpose"></p>
-  </section>
+    <section class="certificate__title">
+      <h1 id="certTitle">Certificate</h1>
+      <p class="certificate__purpose" id="certPurpose">This certificate verifies the holder's document request.</p>
+    </section>
 
-  <div class="certificate__actions" aria-label="Certificate actions">
-    <button id="btnPrint" type="button">Print</button>
-    <button id="btnDownload" type="button">Download PDF</button>
-    <button id="btnCopyLink" type="button" class="button--secondary">Copy Verification Link</button>
+    <div class="certificate__actions" aria-label="Certificate actions">
+      <button id="btnPrint" type="button">Print Certificate</button>
+      <button id="btnDownload" type="button">Download as PDF</button>
+      <button id="btnCopyLink" type="button" class="button--secondary">Copy Verification Link</button>
+    </div>
+
+    <section class="certificate__block">
+      <h2>Student Information</h2>
+      <p><strong>Name:</strong> <span id="certName">Loading...</span></p>
+      <p><strong>Roll Number:</strong> <span id="certRoll">Loading...</span></p>
+      <p><strong>Enrollment Number:</strong> <span id="certEnrollment">Loading...</span></p>
+    </section>
+
+    <section class="certificate__block">
+      <h2>Academic Information</h2>
+      <p><strong>Department:</strong> <span id="certDept">Loading...</span></p>
+      <p><strong>Program:</strong> <span id="certProgram">Loading...</span></p>
+      <p><strong>Academic Year:</strong> <span id="certAcademicYear">Loading...</span></p>
+    </section>
+
+    <section class="certificate__block">
+      <h2>Certificate Purpose</h2>
+      <p><strong>Document Type:</strong> <span id="certDoc">Loading...</span></p>
+    </section>
+
+    <section class="certificate__block certificate__block--approval">
+      <h2>Approval & Authority</h2>
+      <div class="certificate__approver">
+        <div>
+          <p><strong>Name:</strong> <span id="certApprovedName">Loading...</span></p>
+          <p><strong>Designation:</strong> <span id="certApprovedDesig">Loading...</span></p>
+          <p><strong>Office:</strong> <span id="certApprovedOffice">Loading...</span></p>
+        </div>
+        <div class="certificate__signature">
+          <p>Authorized Signature</p>
+          <img id="certSign" width="150" alt="Authorized signature" style="display: none;">
+        </div>
+      </div>
+    </section>
+
+    <footer class="certificate__footer">
+      <p class="certificate__disclaimer">
+        This certificate is issued based on verified records of the institution. Any alteration or misuse is strictly prohibited and may result in legal action.
+      </p>
+      <p class="certificate__verification">
+        Verify this certificate at <a id="certVerifyLink" href="#" target="_blank" rel="noopener">Verification Portal</a>
+        or use the certificate ID for manual verification.
+      </p>
+      <div id="certQrContainer" aria-label="Certificate verification QR code"></div>
+    </footer>
   </div>
 
-  <section class="certificate__block">
-    <h2>Student Information</h2>
-    <p><strong>Name:</strong> <span id="certName"></span></p>
-    <p><strong>Roll Number:</strong> <span id="certRoll"></span></p>
-    <p><strong>Enrollment Number:</strong> <span id="certEnrollment"></span></p>
-  </section>
+  <script>
+    (function() {
+      const safeText = (val, fallback = "N/A") => 
+        (val === null || val === undefined || val === "") ? fallback : String(val);
 
-  <section class="certificate__block">
-    <h2>Academic Information</h2>
-    <p><strong>Department:</strong> <span id="certDept"></span></p>
-    <p><strong>Program:</strong> <span id="certProgram"></span></p>
-    <p><strong>Academic Year:</strong> <span id="certAcademicYear"></span></p>
-  </section>
-
-  <section class="certificate__block">
-    <h2>Certificate Purpose</h2>
-    <p><strong>Document Type:</strong> <span id="certDoc"></span></p>
-  </section>
-
-  <section class="certificate__block certificate__block--approval">
-    <h2>Approval & Authority</h2>
-    <div class="certificate__approver">
-      <div>
-        <p><strong>Name:</strong> <span id="certApprovedName"></span></p>
-        <p><strong>Designation:</strong> <span id="certApprovedDesig"></span></p>
-        <p><strong>Office:</strong> <span id="certApprovedOffice"></span></p>
-      </div>
-      <div class="certificate__signature">
-        <p>Authorized Signature</p>
-        <img id="certSign" width="150" alt="signature">
-      </div>
-    </div>
-  </section>
-
-  <footer class="certificate__footer">
-    <p class="certificate__disclaimer">
-      This certificate is issued based on verified records of the institution. Any alteration or misuse is strictly prohibited.
-    </p>
-    <p class="certificate__verification">
-      Verify this certificate at <a id="certVerifyLink" href="#" target="_blank" rel="noopener">Verification Portal</a>
-      or use the certificate ID for manual verification.
-    </p>
-    <div id="certQrContainer" aria-label="Certificate verification QR"></div>
-    <button onclick="window.print()">Download / Print</button>
-  </footer>
-</div>
-
-<script>
-async function loadCert() {
-  const params = new URLSearchParams(window.location.search);
-  const certificateId = params.get("certificateId") || params.get("id");
-  if (!certificateId) {
-    alert("Certificate identifier is missing.");
-    return;
-  }
-
-  const safeText = (val, fallback = "N/A") => (val === null || val === undefined || val === "" ? fallback : val);
-  const formatDate = (val) => {
-    if (!val) return "N/A";
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? safeText(val) : d.toLocaleString();
-  };
-  const applyStatusBadge = (el, status) => {
-    const norm = (status || "").toUpperCase();
-    const map = {
-      VERIFIED: "status-badge--verified",
-      REVOKED: "status-badge--revoked",
-      PROVISIONAL: "status-badge--provisional",
-    };
-    el.className = `status-badge ${map[norm] || "status-badge--unknown"}`;
-  };
-
-  try {
-    const res = await fetch(`/certificates/${encodeURIComponent(certificateId)}`);
-    if (!res.ok) throw new Error("Certificate not found");
-    const req = await res.json();
-    const cert = req.certificate || {};
-
-    const verificationUrl = safeText(cert.verificationUrl, "#");
-
-    document.getElementById("certName").textContent = safeText(req.name);
-    document.getElementById("certRoll").textContent = safeText(req.roll);
-    document.getElementById("certDoc").textContent = safeText(req.docType);
-    document.getElementById("certTitle").textContent = `${safeText(req.docType)} Certificate`;
-    document.getElementById("certPurpose").textContent = `This is to certify that the holder has been issued the ${safeText(req.docType)} document by the institution.`;
-    document.getElementById("certSign").src = safeText(req.signature, "");
-
-    document.getElementById("certId").textContent = safeText(cert.certificateId);
-    document.getElementById("certStatus").textContent = safeText(cert.status);
-    applyStatusBadge(document.getElementById("certStatus"), cert.status);
-    document.getElementById("certIssuedOn").textContent = formatDate(cert.issuedOn);
-    document.getElementById("certValidUntil").textContent = cert.validUntil ? formatDate(cert.validUntil) : "N/A";
-    document.getElementById("certDept").textContent = safeText(cert.department);
-    document.getElementById("certProgram").textContent = safeText(cert.program);
-    document.getElementById("certAcademicYear").textContent = safeText(cert.academicYear);
-    document.getElementById("certEnrollment").textContent = safeText(cert.enrollmentNumber);
-    document.getElementById("certApprovedName").textContent = safeText(cert.approvedBy?.name);
-    document.getElementById("certApprovedDesig").textContent = safeText(cert.approvedBy?.designation);
-    document.getElementById("certApprovedOffice").textContent = safeText(cert.approvedBy?.office);
-
-    const link = document.getElementById("certVerifyLink");
-    link.href = verificationUrl;
-    link.textContent = verificationUrl === "#" ? "Verification Portal" : verificationUrl;
-
-    const qrContainer = document.getElementById("certQrContainer");
-    if (qrContainer) {
-      qrContainer.innerHTML = "";
-      const isValidUrl =
-        verificationUrl &&
-        verificationUrl !== "#" &&
-        verificationUrl !== "N/A" &&
-        /^https?:\/\//i.test(verificationUrl);
-      if (isValidUrl && window.QRCode) {
-        new QRCode(qrContainer, {
-          text: verificationUrl,
-          width: 128,
-          height: 128,
-          correctLevel: QRCode.CorrectLevel.M,
-        });
-      } else {
-        qrContainer.textContent = "QR unavailable";
-      }
-    }
-
-    const copyButton = document.getElementById("btnCopyLink");
-    if (copyButton) {
-      copyButton.onclick = async () => {
-        if (!verificationUrl || verificationUrl === "#" || verificationUrl === "N/A") {
-          alert("Verification link is unavailable.");
-          return;
-        }
+      const formatDate = (val) => {
+        if (!val) return "N/A";
         try {
-          await navigator.clipboard.writeText(verificationUrl);
-          copyButton.textContent = "Link Copied";
-          setTimeout(() => (copyButton.textContent = "Copy Verification Link"), 1500);
-        } catch (e) {
-          alert("Unable to copy link.");
+          const d = new Date(val);
+          return isNaN(d.getTime()) ? safeText(val) : d.toLocaleString();
+        } catch {
+          return safeText(val);
         }
       };
-    }
 
-    const printButton = document.getElementById("btnPrint");
-    if (printButton) {
-      printButton.onclick = () => window.print();
-    }
+      const applyStatusBadge = (el, status) => {
+        if (!el) return;
+        const norm = String(status || "").toUpperCase();
+        const map = {
+          VERIFIED: "status-badge--verified",
+          REVOKED: "status-badge--revoked",
+          PROVISIONAL: "status-badge--provisional",
+        };
+        el.className = `status-badge ${map[norm] || "status-badge--unknown"}`;
+      };
 
-    const pdfButton = document.getElementById("btnDownload");
-    if (pdfButton) {
-      pdfButton.onclick = () => window.print();
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Unable to load certificate details.");
-  }
-}
-loadCert();
-</script>
+      async function loadCert() {
+        const params = new URLSearchParams(window.location.search);
+        const certificateId = params.get("certificateId") || params.get("id");
+
+        if (!certificateId) {
+          alert("Certificate identifier is missing from the URL.");
+          return;
+        }
+
+        try {
+          const res = await fetch(`/certificates/${encodeURIComponent(certificateId)}`);
+          if (!res.ok) throw new Error("Certificate not found");
+
+          const req = await res.json();
+          const cert = req.certificate || {};
+
+          // Populate certificate data
+          document.getElementById("certName").textContent = safeText(req.name);
+          document.getElementById("certRoll").textContent = safeText(req.roll);
+          document.getElementById("certDoc").textContent = safeText(req.docType);
+          document.getElementById("certTitle").textContent = `${safeText(req.docType)} Certificate`;
+          document.getElementById("certPurpose").textContent = 
+            `This is to certify that the holder has been issued the ${safeText(req.docType)} document by the institution.`;
+
+          const signImg = document.getElementById("certSign");
+          if (signImg && req.signature) {
+            signImg.src = safeText(req.signature, "");
+            signImg.style.display = "block";
+          }
+
+          document.getElementById("certId").textContent = safeText(cert.certificateId);
+          document.getElementById("certStatus").textContent = safeText(cert.status);
+          applyStatusBadge(document.getElementById("certStatus"), cert.status);
+          document.getElementById("certIssuedOn").textContent = formatDate(cert.issuedOn);
+          document.getElementById("certValidUntil").textContent = 
+            cert.validUntil ? formatDate(cert.validUntil) : "N/A";
+          document.getElementById("certDept").textContent = safeText(cert.department);
+          document.getElementById("certProgram").textContent = safeText(cert.program);
+          document.getElementById("certAcademicYear").textContent = safeText(cert.academicYear);
+          document.getElementById("certEnrollment").textContent = safeText(cert.enrollmentNumber);
+          document.getElementById("certApprovedName").textContent = safeText(cert.approvedBy?.name);
+          document.getElementById("certApprovedDesig").textContent = safeText(cert.approvedBy?.designation);
+          document.getElementById("certApprovedOffice").textContent = safeText(cert.approvedBy?.office);
+
+          const verificationUrl = safeText(cert.verificationUrl, "#");
+          const link = document.getElementById("certVerifyLink");
+          if (link) {
+            link.href = verificationUrl;
+            link.textContent = verificationUrl === "#" ? "Verification Portal" : verificationUrl;
+          }
+
+          // Generate QR code
+          const qrContainer = document.getElementById("certQrContainer");
+          if (qrContainer) {
+            qrContainer.innerHTML = "";
+            const isValidUrl = verificationUrl && 
+                               verificationUrl !== "#" && 
+                               verificationUrl !== "N/A" && 
+                               /^https?:\/\//i.test(verificationUrl);
+            
+            if (isValidUrl && typeof QRCode !== 'undefined') {
+              try {
+                new QRCode(qrContainer, {
+                  text: verificationUrl,
+                  width: 128,
+                  height: 128,
+                  correctLevel: QRCode.CorrectLevel.M,
+                });
+              } catch (e) {
+                console.error("QR generation error:", e);
+                qrContainer.textContent = "QR code unavailable";
+              }
+            } else {
+              qrContainer.textContent = "QR code unavailable";
+            }
+          }
+
+          // Button handlers
+          const copyButton = document.getElementById("btnCopyLink");
+          if (copyButton) {
+            copyButton.onclick = async () => {
+              if (!verificationUrl || verificationUrl === "#" || verificationUrl === "N/A") {
+                alert("Verification link is unavailable.");
+                return;
+              }
+              try {
+                await navigator.clipboard.writeText(verificationUrl);
+                const originalText = copyButton.textContent;
+                copyButton.textContent = "✓ Link Copied";
+                setTimeout(() => (copyButton.textContent = originalText), 2000);
+              } catch (e) {
+                alert("Unable to copy link. Please copy manually from the page.");
+              }
+            };
+          }
+
+          const printButton = document.getElementById("btnPrint");
+          if (printButton) {
+            printButton.onclick = () => window.print();
+          }
+
+          const pdfButton = document.getElementById("btnDownload");
+          if (pdfButton) {
+            pdfButton.onclick = () => window.print();
+          }
+
+        } catch (err) {
+          console.error("Load certificate error:", err);
+          alert("Unable to load certificate details. Please verify the certificate ID.");
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCert);
+      } else {
+        loadCert();
+      }
+    })();
+  </script>
 </body>
 </html>

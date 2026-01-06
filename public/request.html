@@ -2,70 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Certificate Request</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <img src="/inpts/gne_logo.png" alt="College Logo" class="app-header__logo">
+      <img src="/inpts/gne_logo.png" alt="GNDEC Logo" class="app-header__logo" onerror="this.style.display='none'">
       <div>
         <p class="app-header__text-main">GNDEC, Ludhiana</p>
         <p class="app-header__text-sub">Certificate Request</p>
       </div>
     </header>
+
     <main class="app-main">
-  <div class="certificate">
-    <h2>Certificate Request</h2>
-    <form id="requestForm" enctype="multipart/form-data">
-      <label for="name">Name</label>
-      <input type="text" id="name" name="name" required>
+      <div class="request-box">
+        <h2>Certificate Request</h2>
+        
+        <form id="requestForm" enctype="multipart/form-data">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="Enter your full name" required>
 
-      <label for="roll">Roll Number</label>
-      <input type="text" id="roll" name="roll" required>
+          <label for="roll">Roll Number</label>
+          <input type="text" id="roll" name="roll" placeholder="Enter your roll number" required>
 
-      <label for="docType">Document Type</label>
-      <select id="docType" name="docType">
-        <option>Bonafide Certificate</option>
-        <option>Fee Receipt</option>
-        <option>Character Certificate</option>
-      </select>
+          <label for="docType">Document Type</label>
+          <select id="docType" name="docType" required>
+            <option value="Bonafide Certificate">Bonafide Certificate</option>
+            <option value="Fee Receipt">Fee Receipt</option>
+            <option value="Character Certificate">Character Certificate</option>
+          </select>
 
-      <label for="signature">Digital Signature</label>
-      <input type="file" id="signature" name="signature" accept="image/*" required>
+          <label for="signature">Digital Signature</label>
+          <input type="file" id="signature" name="signature" accept="image/*" required>
 
-      <button type="submit">Submit Request</button>
-    </form>
-    <p id="requestMsg"></p>
-  </div>
+          <button type="submit">Submit Request</button>
+        </form>
+
+        <div id="requestMsg" style="display: none;"></div>
+
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="index.html">← Back to Home</a>
+        </div>
+      </div>
     </main>
   </div>
 
   <script>
-    const form = document.getElementById("requestForm");
-    const msg = document.getElementById("requestMsg");
+    (function() {
+      const form = document.getElementById("requestForm");
+      const msg = document.getElementById("requestMsg");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      msg.textContent = "Submitting...";
-
-      const formData = new FormData(form);
-      try {
-        const res = await fetch("/submit", { method: "POST", body: formData });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Submission failed");
-        }
-        const reqId = data?.data?.id;
-        msg.innerHTML = `Request submitted! Your Request ID: <strong>${reqId}</strong>. <br>Track it at <a href="status.html?id=${encodeURIComponent(reqId)}">status.html?id=${encodeURIComponent(reqId)}</a>`;
-        form.reset();
-      } catch (err) {
-        console.error(err);
-        msg.textContent = err.message || "Unable to submit request.";
+      if (!form || !msg) {
+        console.error("Required elements not found");
+        return;
       }
-    });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        msg.style.display = "block";
+        msg.style.padding = "12px";
+        msg.style.borderRadius = "6px";
+        msg.style.marginTop = "16px";
+        msg.style.background = "#e3f2fd";
+        msg.style.color = "#2c3e50";
+        msg.textContent = "Submitting your request...";
+
+        const formData = new FormData(form);
+
+        try {
+          const res = await fetch("/submit", { 
+            method: "POST", 
+            body: formData 
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || "Submission failed");
+          }
+
+          const reqId = data?.data?.id;
+
+          if (!reqId) {
+            throw new Error("Invalid response: Request ID not received");
+          }
+
+          msg.style.background = "#d1fae5";
+          msg.style.color = "#065f46";
+          msg.innerHTML = `
+            <strong>Success!</strong> Request submitted successfully!<br>
+            <strong>Request ID:</strong> ${reqId}<br><br>
+            <a href="status.html?id=${encodeURIComponent(reqId)}" 
+               style="display: inline-block; background: #007bff; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 8px;">
+              Track Your Request
+            </a>
+          `;
+
+          form.reset();
+
+        } catch (err) {
+          console.error("Submission error:", err);
+          msg.style.background = "#fee2e2";
+          msg.style.color = "#991b1b";
+          msg.textContent = err.message || "Unable to submit request. Please try again.";
+        }
+      });
+    })();
   </script>
 </body>
 </html>
-
-
