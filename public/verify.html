@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificate Verification</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="verification">
+    <h1>Certificate Verification</h1>
+    <section id="verifyStatus" class="verification__status">Loading...</section>
+    <section id="verifyDetails" class="verification__details" hidden>
+      <p><strong>Student Name:</strong> <span id="verifyName"></span></p>
+      <p><strong>Certificate Type:</strong> <span id="verifyType"></span></p>
+      <p><strong>Issue Date:</strong> <span id="verifyIssued"></span></p>
+      <p><strong>Status:</strong> <span id="verifyCertStatus"></span></p>
+    </section>
+  </main>
+
+  <script>
+    (async function verify() {
+      const params = new URLSearchParams(window.location.search);
+      const certificateId = params.get("certificateId");
+      const statusEl = document.getElementById("verifyStatus");
+      const detailsEl = document.getElementById("verifyDetails");
+
+      const safeText = (val, fallback = "N/A") =>
+        val === null || val === undefined || val === "" ? fallback : val;
+      const formatDate = (val) => {
+        if (!val) return "N/A";
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? safeText(val) : d.toLocaleString();
+      };
+
+      if (!certificateId) {
+        statusEl.textContent = "Certificate ID is missing.";
+        statusEl.classList.add("verification__status--error");
+        return;
+      }
+
+      statusEl.textContent = "Verifying certificate...";
+
+      try {
+        const res = await fetch(`/certificates/${encodeURIComponent(certificateId)}`);
+        if (!res.ok) {
+          throw new Error("Certificate not found");
+        }
+        const record = await res.json();
+        const cert = record.certificate || {};
+
+        const certStatus = safeText(cert.status).toUpperCase();
+        const humanStatus =
+          certStatus === "VERIFIED"
+            ? "Verified"
+            : certStatus === "REVOKED"
+            ? "Revoked"
+            : "Invalid";
+
+        document.getElementById("verifyName").textContent = safeText(record.name);
+        document.getElementById("verifyType").textContent = safeText(record.docType);
+        document.getElementById("verifyIssued").textContent = formatDate(cert.issuedOn);
+        document.getElementById("verifyCertStatus").textContent = humanStatus;
+
+        statusEl.textContent = `Certificate ${humanStatus}`;
+        statusEl.classList.remove("verification__status--error");
+        statusEl.classList.add(
+          certStatus === "VERIFIED" ? "verification__status--ok" : "verification__status--warn"
+        );
+        detailsEl.hidden = false;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Certificate is invalid or not found.";
+        statusEl.classList.add("verification__status--error");
+        detailsEl.hidden = true;
+      }
+    })();
+  </script>
+</body>
+</html>
+

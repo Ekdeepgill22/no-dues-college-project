@@ -1,0 +1,259 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f3f3;
+  margin: 40px;
+  color: #222;
+}
+
+h1, h2, h3 {
+  color: #00264d;
+  font-weight: 600;
+}
+
+a {
+  color: #0056b3;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.app-shell {
+  max-width: 1000px;
+  margin: 0 auto 32px auto;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #003366;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.app-header__logo {
+  max-height: 56px;
+  height: auto;
+  width: auto;
+  object-fit: contain;
+}
+
+.app-header__text-main {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.app-header__text-sub {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.app-main {
+  margin-top: 12px;
+}
+
+form, .request-box, .certificate {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  width: 350px;
+}
+
+.certificate {
+  max-width: 900px;
+  width: auto;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.certificate__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 12px;
+  align-items: stretch;
+}
+
+.certificate__branding {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.certificate__logo {
+  max-height: 100%;
+  height: auto;
+  width: auto;
+  max-width: 18vw;
+  object-fit: contain;
+}
+
+.certificate__college-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.certificate__college-tagline {
+  margin: 2px 0 0 0;
+  color: #555;
+}
+
+.certificate__meta {
+  text-align: right;
+  font-size: 14px;
+}
+
+.certificate__title {
+  text-align: center;
+  margin: 18px 0;
+}
+
+.certificate__purpose {
+  color: #444;
+  margin: 4px 0 0 0;
+}
+
+.certificate__block {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.certificate__block h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.certificate__approver {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.certificate__signature {
+  text-align: center;
+}
+
+.certificate__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 4px 0;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.button--secondary {
+  background: #6c757d;
+}
+
+button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.button--secondary:hover {
+  background: #5a6268;
+}
+
+img {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.chat-box {
+  background: #fff;
+  height: 300px;
+  overflow-y: scroll;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge--verified {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.status-badge--revoked {
+  background: #fdecea;
+  color: #a61b1b;
+}
+
+.status-badge--provisional {
+  background: #fff7e6;
+  color: #8a6d1f;
+}
+
+.status-badge--unknown {
+  background: #e7eaf3;
+  color: #2d3a53;
+}
+
+.certificate__footer {
+  margin-top: 14px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+}
+
+.certificate__verification a {
+  color: #0056b3;
+}
+
+.certificate__verification a:hover {
+  text-decoration: underline;
+}
+
+@media print {
+  body {
+    background: #fff;
+    margin: 0;
+  }
+  .certificate {
+    box-shadow: none;
+    margin: 0;
+    width: auto;
+  }
+  .certificate__actions,
+  .certificate__footer button {
+    display: none !important;
+  }
+  .certificate__verification a {
+    color: #000;
+    text-decoration: none;
+  }
+}

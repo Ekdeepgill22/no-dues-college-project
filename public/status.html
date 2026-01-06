@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Request Status</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <img src="/inpts/gne_logo.png" alt="College Logo" class="app-header__logo">
+      <div>
+        <p class="app-header__text-main">GNDEC, Ludhiana</p>
+        <p class="app-header__text-sub">Request Status</p>
+      </div>
+    </header>
+    <main class="app-main">
+  <div class="certificate">
+    <h2>Request Status</h2>
+    <div style="margin-bottom: 12px;">
+      <label for="requestId">Request ID</label>
+      <input type="text" id="requestId" placeholder="Enter your Request ID">
+      <button id="checkBtn" type="button">Check Status</button>
+    </div>
+    <div id="statusArea"></div>
+  </div>
+    </main>
+  </div>
+
+  <script>
+    const input = document.getElementById("requestId");
+    const btn = document.getElementById("checkBtn");
+    const statusArea = document.getElementById("statusArea");
+
+    function render(message, isError = false) {
+      statusArea.innerHTML = `<p style="padding:10px;${isError ? "color:red;" : ""}">${message}</p>`;
+    }
+
+    async function loadStatus(id) {
+      if (!id) {
+        render("Please enter a Request ID.", true);
+        return;
+      }
+      render("Loading...");
+      try {
+        const res = await fetch("/requests");
+        if (!res.ok) throw new Error("Unable to load requests");
+        const data = await res.json();
+        const req = data.find((r) => String(r.id) === String(id));
+        if (!req) {
+          render("No request found for this ID.", true);
+          return;
+        }
+        const status = req.requestStatus || req.status || "Pending";
+        const certId = req.certificate?.certificateId;
+        const certStatus = req.certificate?.status;
+        const canDownload = certId && certStatus === "VERIFIED";
+        statusArea.innerHTML = `
+          <p><b>Name:</b> ${req.name}</p>
+          <p><b>Roll:</b> ${req.roll}</p>
+          <p><b>Document:</b> ${req.docType}</p>
+          <p><b>Status:</b> ${status}</p>
+          ${
+            canDownload
+              ? `<p><a href="certificate.html?certificateId=${encodeURIComponent(certId)}" target="_blank" rel="noopener">View / Download Certificate</a></p>`
+              : ""
+          }
+        `;
+      } catch (err) {
+        console.error(err);
+        render("Error loading status. Please try again.", true);
+      }
+    }
+
+    btn.addEventListener("click", () => loadStatus(input.value.trim()));
+
+    // Auto-load if id provided in query string
+    const params = new URLSearchParams(window.location.search);
+    const initialId = params.get("id");
+    if (initialId) {
+      input.value = initialId;
+      loadStatus(initialId);
+    }
+  </script>
+</body>
+</html>
+
+

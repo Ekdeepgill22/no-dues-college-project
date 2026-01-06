@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>College Document Request</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app-shell">
+  <header class="app-header">
+    <img src="/inpts/gne_logo.png" alt="College Logo" class="app-header__logo">
+    <div>
+      <p class="app-header__text-main">GNDEC, Ludhiana</p>
+      <p class="app-header__text-sub">College Document Services</p>
+    </div>
+  </header>
+
+  <main class="app-main">
+  <div class="request-box">
+    
+    <h2>College Document Request Form</h2>
+
+    <form id="studentForm" enctype="multipart/form-data">
+      <label>Name:</label>
+      <input type="text" name="name" required>
+
+      <label>Roll No:</label>
+      <input type="text" name="roll" required>
+
+      <label>Document Type:</label>
+      <select name="docType">
+        <option>Bonafide Certificate</option>
+        <option>Fee Receipt</option>
+        <option>Character Certificate</option>
+      </select>
+
+      <label>Digital Signature:</label>
+      <input type="file" name="signature" accept="image/*" required>
+
+      <button type="submit">Submit</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <p style="margin-top: 20px; text-align: center; display:flex; flex-direction:column; gap:6px;">
+      <a href="request.html">Student: Request a Certificate</a>
+      <a href="status.html">Student: Check Status</a>
+      <a href="verify.html">Public: Verify Certificate</a>
+      <a href="admin-login.html">Admin Login</a>
+    </p>
+  </div>
+  </main>
+</div>
+
+<script>
+const formEl = document.getElementById("studentForm");
+const msgEl = document.getElementById("msg");
+
+formEl.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  msgEl.textContent = "Submitting...";
+  try {
+    const res = await fetch("/submit", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Submission failed");
+    }
+    msgEl.innerHTML =
+      data.message +
+      `<br><a href="status.html?id=${data.data.id}">Check Status</a>`;
+  } catch (err) {
+    console.error(err);
+    msgEl.textContent = err.message || "Submission failed";
+  }
+});
+</script>
+
+</body>
+</html>

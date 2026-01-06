@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Certificate Request</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <img src="/inpts/gne_logo.png" alt="College Logo" class="app-header__logo">
+      <div>
+        <p class="app-header__text-main">GNDEC, Ludhiana</p>
+        <p class="app-header__text-sub">Certificate Request</p>
+      </div>
+    </header>
+    <main class="app-main">
+  <div class="certificate">
+    <h2>Certificate Request</h2>
+    <form id="requestForm" enctype="multipart/form-data">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="roll">Roll Number</label>
+      <input type="text" id="roll" name="roll" required>
+
+      <label for="docType">Document Type</label>
+      <select id="docType" name="docType">
+        <option>Bonafide Certificate</option>
+        <option>Fee Receipt</option>
+        <option>Character Certificate</option>
+      </select>
+
+      <label for="signature">Digital Signature</label>
+      <input type="file" id="signature" name="signature" accept="image/*" required>
+
+      <button type="submit">Submit Request</button>
+    </form>
+    <p id="requestMsg"></p>
+  </div>
+    </main>
+  </div>
+
+  <script>
+    const form = document.getElementById("requestForm");
+    const msg = document.getElementById("requestMsg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "Submitting...";
+
+      const formData = new FormData(form);
+      try {
+        const res = await fetch("/submit", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Submission failed");
+        }
+        const reqId = data?.data?.id;
+        msg.innerHTML = `Request submitted! Your Request ID: <strong>${reqId}</strong>. <br>Track it at <a href="status.html?id=${encodeURIComponent(reqId)}">status.html?id=${encodeURIComponent(reqId)}</a>`;
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        msg.textContent = err.message || "Unable to submit request.";
+      }
+    });
+  </script>
+</body>
+</html>
+
+

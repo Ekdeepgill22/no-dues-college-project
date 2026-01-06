@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h2>Admin Dashboard</h2>
+
+<div id="requests"></div>
+
+<script>
+async function loadRequests() {
+  const res = await fetch("/requests");
+  const data = await res.json();
+  const container = document.getElementById("requests");
+  container.innerHTML = "";
+
+  data.forEach(req => {
+    const div = document.createElement("div");
+    div.className = "request-box";
+    div.innerHTML = `
+      <p><b>Name:</b> ${req.name}</p>
+      <p><b>Roll:</b> ${req.roll}</p>
+      <p><b>Document:</b> ${req.docType}</p>
+      <p><b>Status:</b> ${req.status}</p>
+      <p><b>Signature:</b><br><img src="${req.signature}" width="150"></p>
+      <a href="chat.html?id=${req.id}&role=admin"><button>Chat</button></a>
+      ${req.status === "Pending" ? `<button onclick="approve(${req.id})">Approve</button>` : ""}
+      ${req.status === "Approved" ? `<a href="certificate.html?id=${req.id}"><button>Generate Certificate</button></a>` : ""}
+    `;
+    container.appendChild(div);
+  });
+}
+
+async function approve(id) {
+  await fetch(`/approve/${id}`, { method: "PATCH" });
+  loadRequests();
+}
+
+loadRequests();
+</script>
+</body>
+</html>
