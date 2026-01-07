@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>College Document Request</title>
+  <title>College Document Services</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,88 +18,46 @@
 
     <main class="app-main">
       <div class="request-box">
-        <h2>College Document Request Form</h2>
+        <h2>Welcome to Document Services</h2>
+        
+        <p style="text-align: center; margin-bottom: 24px; color: #64748b;">
+          Select an option below to continue
+        </p>
 
-        <form id="studentForm" enctype="multipart/form-data">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <a href="request.html" style="display: block; text-align: center; background: #007bff; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
+            📝 Request Certificate
+          </a>
+          
+          <a href="status.html" style="display: block; text-align: center; background: #28a745; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
+            🔍 Check Request Status
+          </a>
+          
+          <a href="verify.html" style="display: block; text-align: center; background: #17a2b8; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
+            ✓ Verify Certificate
+          </a>
+          
+          <a href="admin-login.html" style="display: block; text-align: center; background: #6c757d; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: background 0.2s;">
+            🔐 Admin Login
+          </a>
+        </div>
 
-          <label for="roll">Roll Number</label>
-          <input type="text" id="roll" name="roll" placeholder="Enter your roll number" required>
-
-          <label for="docType">Document Type</label>
-          <select id="docType" name="docType" required>
-            <option value="Bonafide Certificate">Bonafide Certificate</option>
-            <option value="Fee Receipt">Fee Receipt</option>
-            <option value="Character Certificate">Character Certificate</option>
-          </select>
-
-          <label for="signature">Digital Signature</label>
-          <input type="file" id="signature" name="signature" accept="image/*" required>
-
-          <button type="submit">Submit Request</button>
-        </form>
-
-        <div id="msg" style="display: none;"></div>
-
-        <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 8px; text-align: center;">
-          <a href="request.html">Student: Request a Certificate</a>
-          <a href="status.html">Student: Check Status</a>
-          <a href="verify.html">Public: Verify Certificate</a>
-          <a href="admin-login.html">Admin Login</a>
+        <div style="margin-top: 24px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <h3 style="font-size: 16px; margin-bottom: 8px; color: #003366;">About Document Services</h3>
+          <p style="font-size: 14px; color: #64748b; margin: 0; line-height: 1.6;">
+            This portal allows students to request official college documents including Bonafide Certificates, 
+            Fee Receipts, and Character Certificates. Track your request status and verify issued certificates.
+          </p>
         </div>
       </div>
     </main>
   </div>
 
-  <script>
-    (function() {
-      const formEl = document.getElementById("studentForm");
-      const msgEl = document.getElementById("msg");
-
-      if (!formEl || !msgEl) {
-        console.error("Required elements not found");
-        return;
-      }
-
-      formEl.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(formEl);
-        msgEl.style.display = "block";
-        msgEl.style.color = "#2c3e50";
-        msgEl.style.background = "#e3f2fd";
-        msgEl.style.padding = "12px";
-        msgEl.style.borderRadius = "6px";
-        msgEl.textContent = "Submitting your request...";
-
-        try {
-          const res = await fetch("/submit", { 
-            method: "POST", 
-            body: formData 
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            throw new Error(data.error || "Submission failed");
-          }
-
-          msgEl.style.background = "#d1fae5";
-          msgEl.style.color = "#065f46";
-          msgEl.innerHTML = `
-            <strong>Success!</strong> ${data.message}<br>
-            <a href="status.html?id=${encodeURIComponent(data.data.id)}" style="color: #0056b3; font-weight: 600;">Check Your Request Status</a>
-          `;
-          formEl.reset();
-        } catch (err) {
-          console.error("Submission error:", err);
-          msgEl.style.background = "#fee2e2";
-          msgEl.style.color = "#991b1b";
-          msgEl.textContent = err.message || "Unable to submit request. Please try again.";
-        }
-      });
-    })();
-  </script>
+  <style>
+    a[href^="request"]:hover { background: #0056b3 !important; }
+    a[href^="status"]:hover { background: #1e7e34 !important; }
+    a[href^="verify"]:hover { background: #138496 !important; }
+    a[href^="admin"]:hover { background: #5a6268 !important; }
+  </style>
 </body>
 </html>

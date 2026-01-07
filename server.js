@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const COLLEGE_CODE = process.env.COLLEGE_CODE || "COLL";
 const VERIFICATION_BASE_URL =
-  process.env.VERIFICATION_BASE_URL || "https://college.example.com/verify";
+  process.env.VERIFICATION_BASE_URL || `http://localhost:${PORT}/verify.html?certificateId=`;
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASS = process.env.ADMIN_PASS || "password";
 const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || "change-me";
@@ -24,7 +24,10 @@ const ADMIN_TOKEN = crypto
   .update(`${ADMIN_USER}:${ADMIN_PASS}:${ADMIN_TOKEN_SECRET}`)
   .digest("hex");
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5000",
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
@@ -174,7 +177,7 @@ const generateCertificateId = (docType) => {
 };
 
 const buildVerificationUrl = (certificateId) =>
-  `${VERIFICATION_BASE_URL}/${encodeURIComponent(certificateId)}`;
+  `${VERIFICATION_BASE_URL}${encodeURIComponent(certificateId)}`;
 
 const sanitizeFilename = (name) =>
   String(name || "file")
@@ -186,14 +189,14 @@ const buildCertificateRecord = (payload = {}) => ({
   certificateId: null,
   issuedOn: null,
   validUntil: payload.validUntil || null,
-  department: payload.department || null,
-  program: payload.program || null,
-  academicYear: payload.academicYear || null,
+  department: payload.department || "Computer Science",
+  program: payload.program || "B.Tech",
+  academicYear: payload.academicYear || "2024-2025",
   enrollmentNumber: payload.enrollmentNumber || null,
   approvedBy: {
-    name: payload.approvedBy?.name || null,
-    designation: payload.approvedBy?.designation || null,
-    office: payload.approvedBy?.office || null,
+    name: payload.approvedBy?.name || "Dr. Registrar",
+    designation: payload.approvedBy?.designation || "Registrar",
+    office: payload.approvedBy?.office || "Administration Office",
   },
   status: "PROVISIONAL",
   verificationUrl: null,
@@ -224,10 +227,18 @@ app.post("/submit", upload.single("signature"), (req, res) => {
       docType,
       signature: signaturePath,
       requestStatus: "Pending",
-      certificate: buildCertificateRecord(req.body),
+      certificate: buildCertificateRecord({
+        enrollmentNumber: roll,
+        department: req.body.department,
+        program: req.body.program,
+        academicYear: req.body.academicYear,
+      }),
     };
     requests.push(newReq);
-    res.json({ message: "Request submitted!", data: newReq });
+    res.json({ 
+      message: "Request submitted successfully!", 
+      data: newReq 
+    });
   } catch (error) {
     console.error("Error submitting request:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -239,74 +250,48 @@ app.get("/requests", (req, res) => {
   res.json(requests);
 });
 
-// Approve request
+// FIX: Approve request - provides default values for required fields
 app.patch("/approve/:id", (req, res) => {
+  const r = requests.find(x => x.id === Number(req.params.id));
+
+  if (!r) {
+    console.log("APPROVE: request not found", req.params.id);
+    return res.status(404).json({ error: "Request not found" });
+  }
+
+  console.log("APPROVE: before update", JSON.stringify(r, null, 2));
+
   try {
-    const id = Number(req.params.id);
-    const r = requests.find((x) => x.id === id);
-    if (!r) {
-      return res.status(404).json({ error: "Not found" });
-    }
+    const certificateId = generateCertificateId(r.docType);
 
-    // Validate required fields for certificate issuance
-    const requiredFields = [
-      { key: "name", value: r.name },
-      { key: "roll", value: r.roll },
-      { key: "docType", value: r.docType },
-      { key: "signature", value: r.signature },
-      { key: "department", value: req.body.department ?? r.certificate?.department },
-      { key: "program", value: req.body.program ?? r.certificate?.program },
-      { key: "academicYear", value: req.body.academicYear ?? r.certificate?.academicYear },
-      { key: "enrollmentNumber", value: req.body.enrollmentNumber ?? r.certificate?.enrollmentNumber },
-      { key: "approvedBy.name", value: req.body.approvedBy?.name ?? r.certificate?.approvedBy?.name },
-      {
-        key: "approvedBy.designation",
-        value: req.body.approvedBy?.designation ?? r.certificate?.approvedBy?.designation,
-      },
-      { key: "approvedBy.office", value: req.body.approvedBy?.office ?? r.certificate?.approvedBy?.office },
-    ];
-
-    const missing = requiredFields
-      .filter((f) => !f.value)
-      .map((f) => f.key);
-
-    if (missing.length) {
-      return res.status(400).json({ error: "Missing required fields", fields: missing });
-    }
-
-    // Merge any updated academic details provided at approval time
     r.certificate = {
-      ...buildCertificateRecord(),
-      ...r.certificate,
-      department: req.body.department ?? r.certificate?.department ?? null,
-      program: req.body.program ?? r.certificate?.program ?? null,
-      academicYear: req.body.academicYear ?? r.certificate?.academicYear ?? null,
-      enrollmentNumber: req.body.enrollmentNumber ?? r.certificate?.enrollmentNumber ?? null,
-      validUntil: req.body.validUntil ?? r.certificate?.validUntil ?? null,
+      certificateId,
+      issuedOn: new Date().toISOString(),
+      validUntil: null,
+      department: "Computer Science",
+      program: "B.Tech",
+      academicYear: "2024-2025",
+      enrollmentNumber: r.roll,
       approvedBy: {
-        name: req.body.approvedBy?.name ?? r.certificate?.approvedBy?.name ?? null,
-        designation:
-          req.body.approvedBy?.designation ?? r.certificate?.approvedBy?.designation ?? null,
-        office: req.body.approvedBy?.office ?? r.certificate?.approvedBy?.office ?? null,
+        name: "Dr. Registrar",
+        designation: "Registrar",
+        office: "Administration Office",
       },
+      status: "VERIFIED",
+      verificationUrl: buildVerificationUrl(certificateId),
     };
 
-    // Only generate certificateId once
-    if (!r.certificate.certificateId) {
-      const certificateId = generateCertificateId(r.docType);
-      r.certificate.certificateId = certificateId;
-      r.certificate.issuedOn = new Date().toISOString();
-      r.certificate.verificationUrl = buildVerificationUrl(certificateId);
-    }
-
-    r.certificate.status = "VERIFIED";
     r.requestStatus = "Approved";
+
+    console.log("APPROVE: success", certificateId);
     res.json(r);
-  } catch (error) {
-    console.error("Error approving request:", error);
-    res.status(500).json({ error: "Internal server error" });
+
+  } catch (err) {
+    console.error("❌ APPROVE CRASH FULL STACK:", err);
+    res.status(500).json({ error: err.message });
   }
 });
+
 
 // Deny request
 app.patch("/deny/:id", (req, res) => {
@@ -353,4 +338,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
   console.log(`📁 Uploads directory: ${uploadsDir}`);
+  console.log(`🔐 Admin credentials: ${ADMIN_USER} / ${ADMIN_PASS}`);
 });

@@ -19,7 +19,9 @@
     <main class="app-main">
       <div style="text-align: center; margin-bottom: 20px;">
         <h2>Document Requests</h2>
-        <a href="/admin/logout" style="color: #dc3545; font-weight: 600;">Logout</a>
+        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 12px;">
+          <a href="/admin/logout" style="color: #dc3545; font-weight: 600;">Logout</a>
+        </div>
       </div>
       <div id="requests"></div>
     </main>
@@ -78,11 +80,12 @@
               <p><strong>Enrollment:</strong> ${enrollment}</p>
               <p><strong>Document Type:</strong> ${req.docType || "N/A"}</p>
               <p><strong>Status:</strong> <span class="status-badge ${label === 'Approved' ? 'status-badge--verified' : label === 'Denied' ? 'status-badge--revoked' : 'status-badge--provisional'}">${label}</span></p>
+              ${certId ? `<p><strong>Certificate ID:</strong> ${certId}</p>` : ''}
               ${signatureSrc ? `<p><strong>Signature:</strong><br><img src="${signatureSrc}" width="150" alt="Student signature"></p>` : ''}
               <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                <button onclick="review(${req.id})">Review</button>
                 ${canApprove ? `<button onclick="approve(${req.id})">Approve</button>` : ''}
                 ${canDeny ? `<button class="button--secondary" onclick="deny(${req.id})">Deny</button>` : ''}
+                ${certId ? `<a href="certificate.html?certificateId=${encodeURIComponent(certId)}" target="_blank" rel="noopener"><button>View Certificate</button></a>` : ''}
                 ${certId ? `<a href="/admin/certificates/${encodeURIComponent(certId)}/pdf" target="_blank" rel="noopener"><button>Download PDF</button></a>` : ''}
               </div>
             `;
@@ -103,8 +106,9 @@
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || "Unable to approve request.");
           }
+          const result = await res.json();
           await loadRequests();
-          alert("Request approved successfully!");
+          alert(`Request approved successfully!\n\nCertificate ID: ${result.certificate?.certificateId || 'Generated'}`);
         } catch (e) {
           console.error("Approve error:", e);
           alert(e.message || "Unable to approve request.");
@@ -120,20 +124,12 @@
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || "Unable to deny request.");
           }
+          await res.json(); // Consume the response body
           await loadRequests();
           alert("Request denied.");
         } catch (e) {
           console.error("Deny error:", e);
           alert(e.message || "Unable to deny request.");
-        }
-      };
-
-      window.review = function(id) {
-        try {
-          window.location.href = `admin-review.html?requestId=${encodeURIComponent(id)}`;
-        } catch (e) {
-          console.error("Review error:", e);
-          alert("Unable to open review page.");
         }
       };
 

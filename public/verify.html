@@ -20,7 +20,24 @@
       <div class="verification">
         <h1>Certificate Verification</h1>
         
-        <section id="verifyStatus" class="verification__status">
+        <div style="margin-bottom: 24px;">
+          <label for="certificateIdInput" style="display: block; font-weight: 600; margin-bottom: 8px;">
+            Enter Certificate ID
+          </label>
+          <input 
+            type="text" 
+            id="certificateIdInput" 
+            placeholder="e.g., COLL/2025/BONAFIDE-CERTIFICATE/0001"
+            style="width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 15px;">
+          <button 
+            id="verifyBtn" 
+            type="button"
+            style="width: 100%; margin-top: 12px; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 15px;">
+            Verify Certificate
+          </button>
+        </div>
+
+        <section id="verifyStatus" class="verification__status" style="display: none;">
           Verifying certificate...
         </section>
 
@@ -29,6 +46,11 @@
           <p><strong>Certificate Type:</strong> <span id="verifyType"></span></p>
           <p><strong>Issue Date:</strong> <span id="verifyIssued"></span></p>
           <p><strong>Status:</strong> <span id="verifyCertStatus"></span></p>
+          <div style="margin-top: 16px;">
+            <a id="viewCertLink" href="#" target="_blank" rel="noopener" style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+              View Full Certificate
+            </a>
+          </div>
         </section>
 
         <div style="margin-top: 24px; text-align: center;">
@@ -40,10 +62,12 @@
 
   <script>
     (function() {
+      const inputEl = document.getElementById("certificateIdInput");
+      const btnEl = document.getElementById("verifyBtn");
       const statusEl = document.getElementById("verifyStatus");
       const detailsEl = document.getElementById("verifyDetails");
 
-      if (!statusEl || !detailsEl) {
+      if (!inputEl || !btnEl || !statusEl || !detailsEl) {
         console.error("Required elements not found");
         return;
       }
@@ -61,21 +85,22 @@
         }
       };
 
-      async function verify() {
-        const params = new URLSearchParams(window.location.search);
-        const certificateId = params.get("certificateId");
-
-        if (!certificateId) {
-          statusEl.textContent = "Certificate ID is missing from the URL.";
+      async function verify(certificateId) {
+        if (!certificateId || !certificateId.trim()) {
+          statusEl.textContent = "Please enter a valid Certificate ID.";
           statusEl.className = "verification__status verification__status--error";
+          statusEl.style.display = "block";
+          detailsEl.hidden = true;
           return;
         }
 
         statusEl.textContent = "Verifying certificate, please wait...";
         statusEl.className = "verification__status";
+        statusEl.style.display = "block";
+        detailsEl.hidden = true;
 
         try {
-          const res = await fetch(`/certificates/${encodeURIComponent(certificateId)}`);
+          const res = await fetch(`/certificates/${encodeURIComponent(certificateId.trim())}`);
 
           if (!res.ok) {
             throw new Error("Certificate not found");
@@ -95,6 +120,11 @@
           document.getElementById("verifyIssued").textContent = formatDate(cert.issuedOn);
           document.getElementById("verifyCertStatus").textContent = humanStatus;
 
+          const viewLink = document.getElementById("viewCertLink");
+          if (viewLink) {
+            viewLink.href = `certificate.html?certificateId=${encodeURIComponent(certificateId.trim())}`;
+          }
+
           statusEl.textContent = `Certificate Status: ${humanStatus}`;
           statusEl.className = `verification__status ${
             certStatus === "VERIFIED" ? "verification__status--ok" :
@@ -112,11 +142,26 @@
         }
       }
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', verify);
-      } else {
-        verify();
+      // Check URL parameter first (for direct links)
+      const params = new URLSearchParams(window.location.search);
+      const urlCertId = params.get("certificateId");
+      if (urlCertId) {
+        inputEl.value = urlCertId;
+        verify(urlCertId);
       }
+
+      // Button click handler
+      btnEl.addEventListener("click", () => {
+        verify(inputEl.value);
+      });
+
+      // Enter key handler
+      inputEl.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          verify(inputEl.value);
+        }
+      });
     })();
   </script>
 </body>
