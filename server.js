@@ -250,7 +250,7 @@ app.get("/requests", (req, res) => {
   res.json(requests);
 });
 
-// FIX: Approve request - provides default values for required fields
+// Approve request with admin-provided data
 app.patch("/approve/:id", (req, res) => {
   const r = requests.find(x => x.id === Number(req.params.id));
 
@@ -263,20 +263,29 @@ app.patch("/approve/:id", (req, res) => {
 
   try {
     const certificateId = generateCertificateId(r.docType);
+    const body = req.body || {};
+
+    // Use admin-provided data or fallback to defaults
+    const department = body.department || "Computer Science";
+    const program = body.program || "B.Tech";
+    const academicYear = body.academicYear || "2024-2025";
+    const validUntil = body.validUntil || null;
+    
+    const approvedBy = {
+      name: body.approvedBy?.name || "Dr. Registrar",
+      designation: body.approvedBy?.designation || "Registrar",
+      office: body.approvedBy?.office || "Administration Office",
+    };
 
     r.certificate = {
       certificateId,
       issuedOn: new Date().toISOString(),
-      validUntil: null,
-      department: "Computer Science",
-      program: "B.Tech",
-      academicYear: "2024-2025",
+      validUntil,
+      department,
+      program,
+      academicYear,
       enrollmentNumber: r.roll,
-      approvedBy: {
-        name: "Dr. Registrar",
-        designation: "Registrar",
-        office: "Administration Office",
-      },
+      approvedBy,
       status: "VERIFIED",
       verificationUrl: buildVerificationUrl(certificateId),
     };
@@ -291,7 +300,6 @@ app.patch("/approve/:id", (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 
 // Deny request
 app.patch("/deny/:id", (req, res) => {

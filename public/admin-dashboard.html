@@ -5,6 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #003366;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #64748b;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .close-btn:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .form-section {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .form-section h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: #003366;
+    }
+
+    .form-section p {
+      margin: 8px 0;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .form-section p strong {
+      color: #1e293b;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .form-actions button {
+      flex: 1;
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        padding: 20px;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -27,14 +138,95 @@
     </main>
   </div>
 
+  <!-- Approval Modal -->
+  <div id="approvalModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Approve Certificate Request</h2>
+        <button class="close-btn" onclick="closeApprovalModal()">&times;</button>
+      </div>
+
+      <form id="approvalForm">
+        <input type="hidden" id="approvalRequestId" name="requestId">
+
+        <!-- Student Information (Read-only) -->
+        <div class="form-section">
+          <h3>Student Information</h3>
+          <p><strong>Name:</strong> <span id="modalStudentName"></span></p>
+          <p><strong>Roll Number:</strong> <span id="modalStudentRoll"></span></p>
+          <p><strong>Document Type:</strong> <span id="modalDocType"></span></p>
+        </div>
+
+        <!-- Academic Information (Editable) -->
+        <div class="form-section">
+          <h3>Academic Information</h3>
+          
+          <label for="modalDepartment">Department</label>
+          <input type="text" id="modalDepartment" name="department" value="Computer Science" required>
+
+          <label for="modalProgram">Program</label>
+          <select id="modalProgram" name="program" required>
+            <option value="B.Tech">B.Tech</option>
+            <option value="M.Tech">M.Tech</option>
+            <option value="MBA">MBA</option>
+            <option value="MCA">MCA</option>
+            <option value="BCA">BCA</option>
+            <option value="B.Sc">B.Sc</option>
+            <option value="M.Sc">M.Sc</option>
+          </select>
+
+          <label for="modalAcademicYear">Academic Year</label>
+          <input type="text" id="modalAcademicYear" name="academicYear" placeholder="e.g., 2024-2025" required>
+        </div>
+
+        <!-- Certificate Validity (Optional) -->
+        <div class="form-section">
+          <h3>Certificate Validity</h3>
+          
+          <label for="modalValidUntil">Valid Until (Optional)</label>
+          <input type="date" id="modalValidUntil" name="validUntil">
+          <p style="font-size: 13px; color: #64748b; margin-top: 4px;">
+            Leave blank if certificate has no expiry date
+          </p>
+        </div>
+
+        <!-- Approval Authority -->
+        <div class="form-section">
+          <h3>Approval Authority</h3>
+          
+          <label for="modalApproverName">Approver Name</label>
+          <input type="text" id="modalApproverName" name="approverName" value="Dr. Registrar" required>
+
+          <label for="modalApproverDesignation">Designation</label>
+          <input type="text" id="modalApproverDesignation" name="approverDesignation" value="Registrar" required>
+
+          <label for="modalApproverOffice">Office</label>
+          <input type="text" id="modalApproverOffice" name="approverOffice" value="Administration Office" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="button--secondary" onclick="closeApprovalModal()">Cancel</button>
+          <button type="submit">Approve & Generate Certificate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     (function() {
       const container = document.getElementById("requests");
+      const modal = document.getElementById("approvalModal");
+      const approvalForm = document.getElementById("approvalForm");
 
       if (!container) {
         console.error("Requests container not found");
         return;
       }
+
+      // Set default academic year to current year
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+      document.getElementById("modalAcademicYear").value = `${currentYear}-${nextYear}`;
 
       function statusLabel(req) {
         const s = String(req.requestStatus || req.status || "").toLowerCase();
@@ -77,13 +269,12 @@
             div.innerHTML = `
               <p><strong>Name:</strong> ${req.name || "N/A"}</p>
               <p><strong>Roll Number:</strong> ${roll}</p>
-              <p><strong>Enrollment:</strong> ${enrollment}</p>
               <p><strong>Document Type:</strong> ${req.docType || "N/A"}</p>
               <p><strong>Status:</strong> <span class="status-badge ${label === 'Approved' ? 'status-badge--verified' : label === 'Denied' ? 'status-badge--revoked' : 'status-badge--provisional'}">${label}</span></p>
               ${certId ? `<p><strong>Certificate ID:</strong> ${certId}</p>` : ''}
               ${signatureSrc ? `<p><strong>Signature:</strong><br><img src="${signatureSrc}" width="150" alt="Student signature"></p>` : ''}
               <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
-                ${canApprove ? `<button onclick="approve(${req.id})">Approve</button>` : ''}
+                ${canApprove ? `<button onclick="openApprovalModal(${req.id}, '${req.name}', '${roll}', '${req.docType}')">Approve</button>` : ''}
                 ${canDeny ? `<button class="button--secondary" onclick="deny(${req.id})">Deny</button>` : ''}
                 ${certId ? `<a href="certificate.html?certificateId=${encodeURIComponent(certId)}" target="_blank" rel="noopener"><button>View Certificate</button></a>` : ''}
                 ${certId ? `<a href="/admin/certificates/${encodeURIComponent(certId)}/pdf" target="_blank" rel="noopener"><button>Download PDF</button></a>` : ''}
@@ -97,23 +288,85 @@
         }
       }
 
-      window.approve = async function(id) {
-        if (!confirm("Are you sure you want to approve this request?")) return;
+      window.openApprovalModal = function(id, name, roll, docType) {
+        document.getElementById("approvalRequestId").value = id;
+        document.getElementById("modalStudentName").textContent = name;
+        document.getElementById("modalStudentRoll").textContent = roll;
+        document.getElementById("modalDocType").textContent = docType;
         
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+      };
+
+      window.closeApprovalModal = function() {
+        modal.classList.remove("active");
+        document.body.style.overflow = "";
+        approvalForm.reset();
+        
+        // Reset default values
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        document.getElementById("modalAcademicYear").value = `${currentYear}-${nextYear}`;
+        document.getElementById("modalDepartment").value = "Computer Science";
+        document.getElementById("modalProgram").value = "B.Tech";
+        document.getElementById("modalApproverName").value = "Dr. Registrar";
+        document.getElementById("modalApproverDesignation").value = "Registrar";
+        document.getElementById("modalApproverOffice").value = "Administration Office";
+      };
+
+      // Close modal on outside click
+      modal.addEventListener("click", function(e) {
+        if (e.target === modal) {
+          closeApprovalModal();
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape" && modal.classList.contains("active")) {
+          closeApprovalModal();
+        }
+      });
+
+      approvalForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(approvalForm);
+        const id = formData.get("requestId");
+        
+        const payload = {
+          department: formData.get("department"),
+          program: formData.get("program"),
+          academicYear: formData.get("academicYear"),
+          validUntil: formData.get("validUntil") || null,
+          approvedBy: {
+            name: formData.get("approverName"),
+            designation: formData.get("approverDesignation"),
+            office: formData.get("approverOffice")
+          }
+        };
+
         try {
-          const res = await fetch(`/approve/${id}`, { method: "PATCH" });
+          const res = await fetch(`/approve/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || "Unable to approve request.");
           }
+
           const result = await res.json();
+          closeApprovalModal();
           await loadRequests();
           alert(`Request approved successfully!\n\nCertificate ID: ${result.certificate?.certificateId || 'Generated'}`);
         } catch (e) {
           console.error("Approve error:", e);
           alert(e.message || "Unable to approve request.");
         }
-      };
+      });
 
       window.deny = async function(id) {
         if (!confirm("Are you sure you want to deny this request?")) return;
@@ -124,7 +377,7 @@
             const data = await res.json().catch(() => ({}));
             throw new Error(data.error || "Unable to deny request.");
           }
-          await res.json(); // Consume the response body
+          await res.json();
           await loadRequests();
           alert("Request denied.");
         } catch (e) {
