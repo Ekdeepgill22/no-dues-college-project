@@ -36,6 +36,7 @@
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
       position: relative;
       border: 3px double #003366;
+      min-height: 297mm;
     }
 
     .certificate::before {
@@ -211,29 +212,30 @@
     }
 
     /* ====================================
-       Signature & Authority Block
+       Signature & Authority Block - FIXED
        ==================================== */
-        .certificate__authority {
+    .certificate__authority {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
+      gap: 40px;
       margin-top: 15mm;
       padding-top: 8mm;
       border-top: 1px solid #cccccc;
-
-      /* 🔒 CRITICAL: prevent page split */
-      break-inside: avoid;
       page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     .certificate__signature-block {
-      width: 55%;
-      text-align: center;
+      flex: 1;
+      text-align: left;
+      min-width: 200px;
     }
 
     .certificate__qr-block {
-      width: 30%;
+      flex: 0 0 120px;
       text-align: center;
+      align-self: center;
     }
 
     .certificate__signature-block img {
@@ -243,14 +245,11 @@
       border: none !important;
       margin-bottom: 6px;
       display: block;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     .certificate__signature-line {
-      width: 100%;
+      width: 200px;
       height: 1px;
-      background: #000000;
       margin: 8px 0 4px 0;
     }
 
@@ -283,12 +282,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: auto;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto;
     }
 
     #certQrContainer img {
       border: none !important;
       border-radius: 0 !important;
+      max-width: 100px !important;
+      max-height: 100px !important;
     }
 
     /* ====================================
@@ -326,48 +329,126 @@
     }
 
     /* ====================================
-       Print Styles
+       Print Styles - OPTIMIZED FOR ONE PAGE
        ==================================== */
     @media print {
+    @page {
+    size: A4 portrait;
+    margin: 10mm; /* IMPORTANT: give printer breathing room */
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .certificate {
+    width: calc(210mm - 20mm);
+    height: calc(297mm - 20mm);
+    padding: 20mm 25mm;
+    box-sizing: border-box;
+    margin: 0 auto;
+    border: 2px solid #003366;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hide non-print UI */
+  .certificate__actions,
+  .certificate__footer {
+    display: none !important;
+  }
+
+  /* Header */
+  .certificate__header {
+    margin-bottom: 6mm;
+    padding-bottom: 4mm;
+  }
+
+  /* Metadata */
+  .certificate__metadata {
+    margin-bottom: 6mm;
+    padding-bottom: 3mm;
+  }
+
+  /* Title */
+  .certificate__title {
+    margin-bottom: 8mm;
+  }
+
+  /* Body text */
+  .certificate__body {
+    margin-bottom: 35mm; /* Reserve space for signature + QR */
+  }
+
+  .certificate__body p {
+    margin-bottom: 4mm;
+  }
+
+  /* ===============================
+     SIGNATURE + QR (CRITICAL FIX)
+     =============================== */
+
   .certificate__authority {
     position: absolute;
-    bottom: 25mm;
+    bottom: 22mm;
     left: 25mm;
     right: 25mm;
 
-    display: flex;
-    flex-direction: row;     /* force horizontal */
-    flex-wrap: nowrap;       /* prevent wrapping */
-    justify-content: space-between;
-    align-items: flex-end;
-
-    margin: 0;
+    display: block; /* REMOVE flex instability */
     padding-top: 6mm;
-    border-top: 1px solid #000;
-
-    page-break-inside: avoid;
-    break-inside: avoid;
   }
 
+  /* Signature block – FORCE LEFT */
   .certificate__signature-block {
     width: 60%;
-    text-align: center;
+    float: left;
+    text-align: left;
   }
 
+  .certificate__signature-block p {
+    text-align: left;
+  }
+
+  .certificate__signature-line {
+    width: 180px;
+    margin: 6px 0 4px 0;
+  }
+
+  /* QR block – LOCK SIZE */
   .certificate__qr-block {
-    width: 30%;
-    text-align: center;
+    width: 100px;
+    float: right;
+    text-align: right;
   }
 
-  /* Safety: lock QR container */
   #certQrContainer {
     width: 100px;
     height: 100px;
-    margin-left: auto;
+    margin-right: 0;
+    margin-top: -20%;
+  }
+
+  #certQrContainer img,
+  #certQrContainer canvas {
+    width: 100px !important;
+    height: 100px !important;
+  }
+
+  /* Status badge printable */
+  .status-badge--verified,
+  .status-badge--revoked,
+  .status-badge--provisional {
+    border: 1px solid #000;
+  }
+
+  .certificate__authority::after {
+    content: "";
+    display: block;
+    clear: both;
   }
 }
-
-
     /* ====================================
        Responsive Design
        ==================================== */
@@ -400,6 +481,12 @@
       .certificate__qr-block {
         flex: none;
         width: 100%;
+        text-align: center;
+      }
+
+      .certificate__signature-line {
+        margin-left: auto;
+        margin-right: auto;
       }
     }
   </style>
@@ -469,6 +556,7 @@
         <div id="certQrContainer" aria-label="Certificate verification QR code"></div>
       </div>
     </section>
+  </div>
 
   <script>
     (function() {
@@ -534,11 +622,6 @@
           document.getElementById("certApprovedOffice").textContent = safeText(cert.approvedBy?.office);
 
           const verificationUrl = safeText(cert.verificationUrl, "#");
-          const link = document.getElementById("certVerifyLink");
-          if (link) {
-            link.href = verificationUrl;
-            link.textContent = verificationUrl === "#" ? "Verification Portal" : verificationUrl;
-          }
 
           const qrContainer = document.getElementById("certQrContainer");
           if (qrContainer) {
@@ -563,24 +646,6 @@
             } else {
               qrContainer.textContent = "QR unavailable";
             }
-          }
-
-          const copyButton = document.getElementById("btnCopyLink");
-          if (copyButton) {
-            copyButton.onclick = async () => {
-              if (!verificationUrl || verificationUrl === "#" || verificationUrl === "N/A") {
-                alert("Verification link is unavailable.");
-                return;
-              }
-              try {
-                await navigator.clipboard.writeText(verificationUrl);
-                const originalText = copyButton.textContent;
-                copyButton.textContent = "✓ Link Copied";
-                setTimeout(() => (copyButton.textContent = originalText), 2000);
-              } catch (e) {
-                alert("Unable to copy link. Please copy manually from the page.");
-              }
-            };
           }
 
           const printButton = document.getElementById("btnPrint");

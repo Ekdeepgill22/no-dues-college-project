@@ -125,6 +125,7 @@ label {
 input[type="text"],
 input[type="password"],
 input[type="file"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
@@ -139,6 +140,7 @@ textarea {
 
 input[type="text"]:focus,
 input[type="password"]:focus,
+input[type="date"]:focus,
 select:focus,
 textarea:focus {
   outline: none;
@@ -243,6 +245,8 @@ button:active {
   padding: 32px;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  position: relative;
+  min-height: 297mm; /* A4 height */
 }
 
 .certificate__header {
@@ -351,6 +355,90 @@ button:active {
   border-color: #bae6fd;
 }
 
+/* FIXED: Authority section positioning */
+.certificate__authority {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #cccccc;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.certificate__signature-block {
+  flex: 1;
+  min-width: 200px;
+  text-align: left;
+}
+
+.certificate__qr-block {
+  flex: 0 0 120px;
+  text-align: center;
+  align-self: center;
+}
+
+.certificate__signature-block img {
+  max-width: 150px;
+  max-height: 60px;
+  height: auto;
+  border: none !important;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.certificate__signature-line {
+  width: 200px;
+  height: 1px;
+  background: #000000;
+  margin: 12px 0 8px 0;
+}
+
+.certificate__approver-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 4px;
+}
+
+.certificate__approver-designation {
+  font-size: 12px;
+  color: #333333;
+  font-style: italic;
+  margin-bottom: 2px;
+}
+
+.certificate__approver-office {
+  font-size: 11px;
+  color: #666666;
+}
+
+.certificate__qr-label {
+  font-size: 9px;
+  color: #666666;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#certQrContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+
+#certQrContainer img {
+  border: none !important;
+  border-radius: 0 !important;
+  max-width: 100px !important;
+  max-height: 100px !important;
+}
+
 .certificate__approver {
   display: flex;
   justify-content: space-between;
@@ -397,20 +485,6 @@ button:active {
 .certificate__verification a {
   color: #0056b3;
   font-weight: 600;
-}
-
-#certQrContainer {
-  text-align: center;
-  margin: 16px 0;
-  min-height: 128px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#certQrContainer img {
-  border: none;
-  border-radius: 0;
 }
 
 /* ====================================
@@ -538,6 +612,13 @@ form a {
 }
 
 /* ====================================
+   Hidden Elements
+   ==================================== */
+.hidden {
+  display: none !important;
+}
+
+/* ====================================
    Responsive Design
    ==================================== */
 @media (max-width: 768px) {
@@ -581,8 +662,21 @@ form a {
     font-size: 26px;
   }
 
-  .certificate__approver {
+  .certificate__authority {
     flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .certificate__signature-block,
+  .certificate__qr-block {
+    text-align: center;
+    width: 100%;
+  }
+
+  .certificate__signature-line {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   #requests {
@@ -618,9 +712,14 @@ form a {
 }
 
 /* ====================================
-   Print Styles
+   Print Styles - FIXED FOR ONE PAGE
    ==================================== */
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
   body {
     background: #ffffff;
     margin: 0;
@@ -634,28 +733,69 @@ form a {
   .app-header,
   .app-main,
   .certificate__actions,
-  .certificate__footer button,
-  button {
+  .certificate__footer,
+  button,
+  a[href^="http"] {
     display: none !important;
   }
 
   .certificate {
     box-shadow: none;
     margin: 0;
-    padding: 20mm;
+    padding: 0;
     border-radius: 0;
     max-width: none;
-    page-break-after: always;
+    min-height: 0;
+    page-break-after: avoid;
   }
 
   .certificate__header {
     border-bottom: 2px solid #000;
+    page-break-after: avoid;
   }
 
   .certificate__block {
     background: #ffffff;
     border: 1px solid #333;
     page-break-inside: avoid;
+  }
+
+  /* CRITICAL FIX: Authority section in print */
+  .certificate__authority {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 30px;
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid #000;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .certificate__signature-block {
+    flex: 1;
+    text-align: left;
+  }
+
+  .certificate__qr-block {
+    flex: 0 0 100px;
+    text-align: center;
+  }
+
+  .certificate__signature-line {
+    width: 180px;
+  }
+
+  #certQrContainer {
+    width: 100px;
+    height: 100px;
+  }
+
+  #certQrContainer img {
+    width: 100px !important;
+    height: 100px !important;
   }
 
   .certificate__verification a {
@@ -669,6 +809,12 @@ form a {
 
   .status-badge {
     border: 1px solid #000;
+  }
+
+  /* Ensure body content doesn't push authority off page */
+  .certificate__body {
+    max-height: 150mm;
+    overflow: hidden;
   }
 }
 
