@@ -4,83 +4,471 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Certificate</title>
-  <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <style>
+    /* ====================================
+       CSS Reset & Base Styles
+       ==================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #f5f7fa;
+      color: #000000;
+      line-height: 1.8;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    /* ====================================
+       Certificate Container
+       ==================================== */
+    .certificate {
+      max-width: 210mm;
+      width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 20mm 25mm;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      position: relative;
+      border: 3px double #003366;
+    }
+
+    .certificate::before {
+      content: '';
+      position: absolute;
+      top: 15mm;
+      left: 20mm;
+      right: 20mm;
+      bottom: 15mm;
+      pointer-events: none;
+    }
+
+    /* ====================================
+       Certificate Header
+       ==================================== */
+    .certificate__header {
+      text-align: center;
+      margin-bottom: 8mm;
+      padding-bottom: 6mm;
+      border-bottom: 2px solid #003366;
+    }
+
+    .certificate__logo {
+      max-height: 100px;
+      margin-bottom: 8px;
+    }
+
+    .certificate__college-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #003366;
+      line-height: 1.5;
+      margin-bottom: 4px;
+    }
+
+    /* ====================================
+       Certificate Metadata
+       ==================================== */
+    .certificate__metadata {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #555555;
+      margin-bottom: 8mm;
+      padding-bottom: 4mm;
+      border-bottom: 1px solid #cccccc;
+    }
+
+    .certificate__metadata-left,
+    .certificate__metadata-right {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .certificate__metadata-right {
+      text-align: right;
+    }
+
+    .certificate__metadata strong {
+      font-weight: 600;
+      color: #333333;
+    }
+
+    #certStatus {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-badge--verified {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge--revoked {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-badge--provisional {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* ====================================
+       Certificate Title
+       ==================================== */
+    .certificate__title {
+      text-align: center;
+      margin-bottom: 10mm;
+    }
+
+    .certificate__title h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #003366;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+    }
+
+    .certificate__purpose {
+      font-size: 12px;
+      font-style: italic;
+      color: #666666;
+    }
+
+    /* ====================================
+       Certificate Actions (Print/Download)
+       ==================================== */
+    .certificate__actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8mm;
+      justify-content: center;
+    }
+
+    .certificate__actions button {
+      background: #007bff;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .certificate__actions button:hover {
+      background: #0056b3;
+    }
+
+    .certificate__actions .button--secondary {
+      background: #6c757d;
+    }
+
+    .certificate__actions .button--secondary:hover {
+      background: #5a6268;
+    }
+
+    /* ====================================
+       Certificate Body
+       ==================================== */
+    .certificate__body {
+      font-size: 13px;
+      text-align: justify;
+      line-height: 1.9;
+      margin-bottom: 12mm;
+      color: #1a1a1a;
+    }
+
+    .certificate__body p {
+      margin-bottom: 6mm;
+    }
+
+    .certificate__body strong {
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .certificate__body .cert-value {
+      font-weight: 600;
+      color: #003366;
+      text-decoration: none;
+      border-bottom: 1px dotted #003366;
+      padding-bottom: 1px;
+    }
+
+    /* ====================================
+       Signature & Authority Block
+       ==================================== */
+        .certificate__authority {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 15mm;
+      padding-top: 8mm;
+      border-top: 1px solid #cccccc;
+
+      /* 🔒 CRITICAL: prevent page split */
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .certificate__signature-block {
+      width: 55%;
+      text-align: center;
+    }
+
+    .certificate__qr-block {
+      width: 30%;
+      text-align: center;
+    }
+
+    .certificate__signature-block img {
+      max-width: 150px;
+      max-height: 60px;
+      height: auto;
+      border: none !important;
+      margin-bottom: 6px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .certificate__signature-line {
+      width: 100%;
+      height: 1px;
+      background: #000000;
+      margin: 8px 0 4px 0;
+    }
+
+    .certificate__approver-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .certificate__approver-designation {
+      font-size: 11px;
+      color: #333333;
+      font-style: italic;
+    }
+
+    .certificate__approver-office {
+      font-size: 10px;
+      color: #666666;
+    }
+
+    .certificate__qr-label {
+      font-size: 9px;
+      color: #666666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #certQrContainer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: auto;
+    }
+
+    #certQrContainer img {
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* ====================================
+       Certificate Footer
+       ==================================== */
+    .certificate__footer {
+      margin-top: 10mm;
+      padding-top: 6mm;
+      border-top: 1px solid #cccccc;
+      font-size: 9px;
+      color: #666666;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .certificate__footer p {
+      margin-bottom: 4px;
+    }
+
+    .certificate__verification-link {
+      color: #0056b3;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .certificate__verification-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ====================================
+       Hidden Elements
+       ==================================== */
+    .hidden {
+      display: none !important;
+    }
+
+    /* ====================================
+       Print Styles
+       ==================================== */
+    @media print {
+  .certificate__authority {
+    position: absolute;
+    bottom: 25mm;
+    left: 25mm;
+    right: 25mm;
+
+    display: flex;
+    flex-direction: row;     /* force horizontal */
+    flex-wrap: nowrap;       /* prevent wrapping */
+    justify-content: space-between;
+    align-items: flex-end;
+
+    margin: 0;
+    padding-top: 6mm;
+    border-top: 1px solid #000;
+
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .certificate__signature-block {
+    width: 60%;
+    text-align: center;
+  }
+
+  .certificate__qr-block {
+    width: 30%;
+    text-align: center;
+  }
+
+  /* Safety: lock QR container */
+  #certQrContainer {
+    width: 100px;
+    height: 100px;
+    margin-left: auto;
+  }
+}
+
+
+    /* ====================================
+       Responsive Design
+       ==================================== */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .certificate {
+        padding: 15mm 15mm;
+        min-height: auto;
+      }
+
+      .certificate__title h1 {
+        font-size: 22px;
+        letter-spacing: 2px;
+      }
+
+      .certificate__body {
+        font-size: 12px;
+      }
+
+      .certificate__authority {
+        flex-direction: column;
+        gap: 8mm;
+        align-items: center;
+      }
+
+      .certificate__signature-block,
+      .certificate__qr-block {
+        flex: none;
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="certificate">
+    <!-- Certificate Header -->
     <header class="certificate__header">
-      <div class="certificate__branding">
-        <img id="collegeLogo" src="/inpts/gne_logo.png" alt="College Logo" class="certificate__logo" onerror="this.style.display='none'">
-        <div>
-          <p class="certificate__college-name" id="collegeName"> Guru Nanak Dev Engineering College
-          Gill Park, Gill Road, Ludhiana 141006, Punjab(India)</p>
-        </div>
-      </div>
-      <div class="certificate__meta">
-        <p><strong>Certificate ID:</strong> <span id="certId">Loading...</span></p>
-        <p><strong>Status:</strong> <span id="certStatus" class="status-badge">Loading...</span></p>
-        <p><strong>Issued On:</strong> <span id="certIssuedOn">Loading...</span></p>
-        <p><strong>Valid Until:</strong> <span id="certValidUntil">N/A</span></p>
-      </div>
+      <img id="collegeLogo" src="/inpts/gne_logo.png" alt="College Logo" class="certificate__logo" onerror="this.style.display='none'">
+      <p class="certificate__college-name" id="collegeName">Guru Nanak Dev Engineering College<br>Gill Park, Gill Road, Ludhiana 141006, Punjab (India)</p>
     </header>
 
+    <!-- Certificate Metadata (ID, Status, Dates) -->
+    <div class="certificate__metadata">
+      <div class="certificate__metadata-left">
+        <span><strong>Certificate ID:</strong> <span id="certId">Loading...</span></span>
+        <span><strong>Issued On:</strong> <span id="certIssuedOn">Loading...</span></span>
+      </div>
+      <div class="certificate__metadata-right">
+        <span><strong>Status:</strong> <span id="certStatus" class="status-badge">Loading...</span></span>
+        <span><strong>Valid Until:</strong> <span id="certValidUntil">N/A</span></span>
+      </div>
+    </div>
+
+    <!-- Certificate Title -->
     <section class="certificate__title">
-      <h1 id="certTitle">Certificate</h1>
+      <h1 id="certTitle"></h1>
       <p class="certificate__purpose" id="certPurpose">This certificate verifies the holder's document request.</p>
     </section>
 
-    <div class="certificate__actions" aria-label="Certificate actions">
-      <button id="btnPrint" type="button">Print Certificate</button>
-      <button id="btnDownload" type="button">Download as PDF</button>
-      <button id="btnCopyLink" type="button" class="button--secondary">Copy Verification Link</button>
-    </div>
+    <!-- Certificate Body (Natural Paragraph Flow) -->
+    <section class="certificate__body">
+      <p>
+        This is to certify that <strong class="cert-value" id="certName">Loading...</strong>, 
+        bearing Roll Number <strong class="cert-value" id="certRoll">Loading...</strong> 
+        is a bonafide student of Guru Nanak Dev Engineering College, Ludhiana.
+        <span id="certEnrollment" class="hidden"></span>
+        The student is enrolled in the <strong class="cert-value" id="certProgram">Loading...</strong> program 
+        in the Department of <strong class="cert-value" id="certDept">Loading...</strong> 
+        for the academic year <strong class="cert-value" id="certAcademicYear">Loading...</strong>.
+      </p>
 
-    <section class="certificate__block">
-      <h2>Student Information</h2>
-      <p><strong>Name:</strong> <span id="certName">Loading...</span></p>
-      <p><strong>Roll Number:</strong> <span id="certRoll">Loading...</span></p>
-      <p><strong>Enrollment Number:</strong> <span id="certEnrollment">Loading...</span></p>
+      <p>
+        This certificate is issued for the purpose of <strong class="cert-value" id="certDoc">Loading...</strong> 
+        as per the student's request and is based on the verified records maintained by this institution.
+      </p>
+
+      <p>
+        This certificate has been duly issued by the institution after 
+        verification of the relevant records. Any unauthorized use, alteration, 
+        or misrepresentation of this document is strictly prohibited 
+        and may result in disciplinary and/or legal action.
+      </p>
     </section>
 
-    <section class="certificate__block">
-      <h2>Academic Information</h2>
-      <p><strong>Department:</strong> <span id="certDept">Loading...</span></p>
-      <p><strong>Program:</strong> <span id="certProgram">Loading...</span></p>
-      <p><strong>Academic Year:</strong> <span id="certAcademicYear">Loading...</span></p>
-    </section>
+    <!-- Authority & Signature Block -->
+    <section class="certificate__authority">
+      <div class="certificate__signature-block">
+        <img id="certSign" src="/inpts/principal_sign.png" alt="Authorized Signature">
+        <div class="certificate__signature-line"></div>
+        <p class="certificate__approver-name" id="certApprovedName">Loading...</p>
+        <p class="certificate__approver-designation" id="certApprovedDesig">Loading...</p>
+        <p class="certificate__approver-office" id="certApprovedOffice">Loading...</p>
+      </div>
 
-    <section class="certificate__block">
-      <h2>Certificate Purpose</h2>
-      <p><strong>Document Type:</strong> <span id="certDoc">Loading...</span></p>
-    </section>
-
-    <section class="certificate__block certificate__block--approval">
-      <h2>Approval & Authority</h2>
-      <div class="certificate__approver">
-        <div>
-          <p><strong>Name:</strong> <span id="certApprovedName">Loading...</span></p>
-          <p><strong>Designation:</strong> <span id="certApprovedDesig">Loading...</span></p>
-          <p><strong>Office:</strong> <span id="certApprovedOffice">Loading...</span></p>
-        </div>
-        <div class="certificate__signature">
-          <p>Authorized Signature</p>
-          <img id="certSign" width="150" alt="Authorized signature" style="display: none;">
-        </div>
+      <div class="certificate__qr-block">
+        <div id="certQrContainer" aria-label="Certificate verification QR code"></div>
       </div>
     </section>
-
-    <footer class="certificate__footer">
-      <p class="certificate__disclaimer">
-        This certificate is issued based on verified records of the institution. Any alteration or misuse is strictly prohibited and may result in legal action.
-      </p>
-      <p class="certificate__verification">
-        Verify this certificate at <a id="certVerifyLink" href="#" target="_blank" rel="noopener">Verification Portal</a>
-        or use the certificate ID for manual verification.
-      </p>
-      <div id="certQrContainer" aria-label="Certificate verification QR code"></div>
-    </footer>
-  </div>
 
   <script>
     (function() {
@@ -105,7 +493,7 @@
           REVOKED: "status-badge--revoked",
           PROVISIONAL: "status-badge--provisional",
         };
-        el.className = `status-badge ${map[norm] || "status-badge--unknown"}`;
+        el.className = `status-badge ${map[norm] || "status-badge--provisional"}`;
       };
 
       async function loadCert() {
@@ -124,19 +512,12 @@
           const req = await res.json();
           const cert = req.certificate || {};
 
-          // Populate certificate data
           document.getElementById("certName").textContent = safeText(req.name);
           document.getElementById("certRoll").textContent = safeText(req.roll);
           document.getElementById("certDoc").textContent = safeText(req.docType);
-          document.getElementById("certTitle").textContent = `${safeText(req.docType)} Certificate`;
+          document.getElementById("certTitle").textContent = `${safeText(req.docType)}`;
           document.getElementById("certPurpose").textContent = 
             `This is to certify that the holder has been issued the ${safeText(req.docType)} document by the institution.`;
-
-          const signImg = document.getElementById("certSign");
-          if (signImg && req.signature) {
-            signImg.src = safeText(req.signature, "");
-            signImg.style.display = "block";
-          }
 
           document.getElementById("certId").textContent = safeText(cert.certificateId);
           document.getElementById("certStatus").textContent = safeText(cert.status);
@@ -159,7 +540,6 @@
             link.textContent = verificationUrl === "#" ? "Verification Portal" : verificationUrl;
           }
 
-          // Generate QR code
           const qrContainer = document.getElementById("certQrContainer");
           if (qrContainer) {
             qrContainer.innerHTML = "";
@@ -172,20 +552,19 @@
               try {
                 new QRCode(qrContainer, {
                   text: verificationUrl,
-                  width: 128,
-                  height: 128,
+                  width: 100,
+                  height: 100,
                   correctLevel: QRCode.CorrectLevel.M,
                 });
               } catch (e) {
                 console.error("QR generation error:", e);
-                qrContainer.textContent = "QR code unavailable";
+                qrContainer.textContent = "QR unavailable";
               }
             } else {
-              qrContainer.textContent = "QR code unavailable";
+              qrContainer.textContent = "QR unavailable";
             }
           }
 
-          // Button handlers
           const copyButton = document.getElementById("btnCopyLink");
           if (copyButton) {
             copyButton.onclick = async () => {
